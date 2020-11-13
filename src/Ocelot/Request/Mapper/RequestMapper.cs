@@ -25,6 +25,12 @@ public class RequestMapper : IRequestMapper
         return requestMessage;
     }
 
+    private static bool IsMultipartContentType(string contentType)
+    {
+        return !string.IsNullOrEmpty(contentType)
+               && contentType.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     private static HttpContent MapContent(HttpRequest request)
     {
         HttpContent content;
@@ -36,9 +42,36 @@ public class RequestMapper : IRequestMapper
             return null;
         }
 
-        content = request.ContentLength is 0
-            ? new ByteArrayContent(Array.Empty<byte>()) 
-            : new StreamHttpContent(request.HttpContext);
+        HttpContent content;
+        if (IsMultipartContentType(request.ContentType))
+        {
+            content = new MultipartFormDataContent();
+            if (request.Form != null && request.Form.Files != null)
+            {
+                foreach (var f in request.Form.Files)
+                {
+                    using var memStream = new MemoryStream();
+                    await f.CopyToAsync(memStream);
+                    var fileContent = new ByteArrayContent(memStream.ToArray());
+                    ((MultipartFormDataContent)content).Add(fileContent, f.Name, f.FileName);
+                }
+            }
+
+            if (request.Form != null)
+            {
+                foreach (var key in request.Form.Keys)
+                {
+                    var strContent = new StringContent(request.Form[key]);
+                    ((MultipartFormDataContent)content).Add(strContent, key);
+                }
+            }
+        }
+        else
+        {
+            content = request.ContentLength is 0
+                ? new ByteArrayContent(Array.Empty<byte>())
+                : new StreamHttpContent(request.HttpContext);
+        }
 
         AddContentHeaders(request, content);
 
