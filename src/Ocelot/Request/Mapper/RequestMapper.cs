@@ -27,7 +27,7 @@ public class RequestMapper : IRequestMapper
 
         private static bool IsMultipartContentType(string contentType)
             => !string.IsNullOrEmpty(contentType)
-                && contentType.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
+                && contentType.Contains("multipart/form-data", StringComparison.OrdinalIgnoreCase);
 
     private static HttpContent MapContent(HttpRequest request)
     {
