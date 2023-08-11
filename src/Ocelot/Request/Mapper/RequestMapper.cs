@@ -25,11 +25,9 @@ public class RequestMapper : IRequestMapper
         return requestMessage;
     }
 
-    private static bool IsMultipartContentType(string contentType)
-    {
-        return !string.IsNullOrEmpty(contentType)
-               && contentType.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
-    }
+        private static bool IsMultipartContentType(string contentType)
+            => !string.IsNullOrEmpty(contentType)
+                && contentType.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0;
 
     private static HttpContent MapContent(HttpRequest request)
     {
